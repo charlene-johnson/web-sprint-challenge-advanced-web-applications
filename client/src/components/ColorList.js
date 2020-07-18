@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosWithAuth from "../utils/axiosWithAuth";
+
 
 const initialColor = {
   color: "",
@@ -10,7 +11,11 @@ const ColorList = ({ colors, updateColors }) => {
   console.log(colors);
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
-
+  const [addNewColor, setAddNewColor] = useState({
+    color: '',
+    hex: ''
+  })
+ 
   const editColor = color => {
     setEditing(true);
     setColorToEdit(color);
@@ -21,11 +26,41 @@ const ColorList = ({ colors, updateColors }) => {
     // Make a put request to save your updated color
     // think about where will you get the id from...
     // where is is saved right now?
+    axiosWithAuth()
+    .put(`/api/colors/${colorToEdit.id}`, colorToEdit)
+    .then(res => {
+      setEditing(res.data);
+    })
+    .catch(err => console.log(err))
   };
 
   const deleteColor = color => {
     // make a delete request to delete this color
+    axiosWithAuth()
+    .delete(`/api/colors/${color.id}`)
+    .then(res => {
+      console.log(res)
+    })
+    .catch(err => console.log(err))
   };
+
+  const addColor = e => {
+    e.preventDefault();
+    setAddNewColor({color: "", hex: ""})
+    axiosWithAuth()
+    .post('/api/colors', addNewColor)
+    .then(res => {
+      setAddNewColor(res.data)
+    })
+    .catch(err => console.log(err))
+  }
+
+  const handleChange = e => {
+    setAddNewColor({
+      ...addNewColor,
+      [e.target.name] : e.target.value
+    })
+  }
 
   return (
     <div className="colors-wrap">
@@ -82,6 +117,23 @@ const ColorList = ({ colors, updateColors }) => {
       )}
       <div className="spacer" />
       {/* stretch - build another form here to add a color */}
+              <form onSubmit={addColor}>
+                <label>color name: </label>
+                <input
+                type="text"
+                name='color'
+                value={addNewColor.color}
+                onChange={handleChange}
+                />
+               <label>Hex Value: </label>
+                <input
+                type="text"
+                name='hex'
+                value={addNewColor.hex}
+                onChange={handleChange}
+                />
+              <button>Add color</button>
+              </form>
     </div>
   );
 };
